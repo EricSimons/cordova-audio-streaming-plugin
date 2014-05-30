@@ -5,7 +5,7 @@
   
 <name>Stream</name>
 <js-module name="Stream" src="www/Stream.js">
-  <clobbers target="cordova.plugins.Stream" />
+  <clobbers target="window.Stream" />
 </js-module>
 <platform name="ios">
   <config-file parent="/*" target="config.xml">
