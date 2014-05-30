@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="com.sonny.stream" version="1.0.0" 
+	xmlns="http://apache.org/cordova/ns/plugins/1.0" 
+	xmlns:android="http://schemas.android.com/apk/res/android">
+  
+<name>Stream</name>
+<js-module name="Stream" src="www/Stream.js">
+  <clobbers target="cordova.plugins.Stream" />
+</js-module>
+<platform name="ios">
+  <config-file parent="/*" target="config.xml">
+    <feature name="Stream">
+      <param name="ios-package" value="CDVStream" />
+    </feature>
+  </config-file>
+  <header-file src="src/ios/CDVStream.h" />
+  <source-file src="src/ios/CDVStream.m" />
+</platform>
+</plugin>
