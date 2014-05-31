@@ -11,6 +11,7 @@
   <config-file parent="/*" target="config.xml">
     <feature name="Stream">
       <param name="ios-package" value="CDVStream" />
+      <param name="onload" value="true" />
     </feature>
   </config-file>
   <header-file src="src/ios/CDVStream.h" />
