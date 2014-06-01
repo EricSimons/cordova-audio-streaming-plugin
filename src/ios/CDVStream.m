@@ -10,10 +10,9 @@
 
 @interface CDVStream()
 
-@property (nonatomic, strong) NSMutableDictionary *audioPlayerItemsDict;
+@property (nonatomic, strong) NSMutableDictionary *audioPlayerDict;
 @property (nonatomic, strong) NSMutableDictionary *callbackDict;
 
-@property (nonatomic, strong) AVPlayerItem *currentlyPlayingItem;
 @property (nonatomic, strong) AVPlayer *audioPlayer;
 
 @end
@@ -22,9 +21,9 @@
 
 #pragma mark lazy instantiation methods
 
-- (NSMutableDictionary *)audioPlayerItemsDict {
-    if (!_audioPlayerItemsDict) _audioPlayerItemsDict = [[NSMutableDictionary alloc] init];
-    return _audioPlayerItemsDict;
+- (NSMutableDictionary *)audioPlayerDict {
+    if (!_audioPlayerDict) _audioPlayerDict = [[NSMutableDictionary alloc] init];
+    return _audioPlayerDict;
 }
 
 - (AVPlayer *)audioPlayer {
@@ -42,36 +41,39 @@
     NSString *urlString = command.arguments[1];
     NSString *queueName = [NSString stringWithFormat:@"%@ stream queue", urlString];
     
-    const char *cQueueName = [queueName cStringUsingEncoding:NSASCIIStringEncoding];
+    //const char *cQueueName = [queueName cStringUsingEncoding:NSASCIIStringEncoding];
     
-    dispatch_queue_t streamQueue = dispatch_queue_create(cQueueName, NULL);
+    //dispatch_queue_t streamQueue = dispatch_queue_create(cQueueName, NULL);
     
-    dispatch_async(streamQueue, ^{
+    //dispatch_async(streamQueue, ^{
         NSURL *url = [NSURL URLWithString:urlString];
         
         //AudioStreamerPlayerItem *item = [[AudioStreamerPlayerItem alloc] initWithURL:url];
-        AVPlayerItem *item = [[AVPlayerItem alloc] initWithURL:url];
+        AVPlayer *item = [[AVPlayer alloc] initWithURL:url];
         [item addObserver:self forKeyPath:@"status" options:0 context:NULL];
+        [item play];
         //item.mediaID = mediaID;
         //item.callbackID = command.callbackId;
         
         self.callbackDict[mediaID] = command.callbackId;
-        self.audioPlayerItemsDict[mediaID] = item;
-    });
+        self.audioPlayerDict[mediaID] = item;
+    //});
 }
 
 - (void) cordovaPlayStream:(CDVInvokedUrlCommand *)command {
+    [self.audioPlayer pause];
     NSString *mediaID = command.arguments[0];
     
-    AVPlayerItem *itemToPlay = self.audioPlayerItemsDict[mediaID];
-    if (itemToPlay != self.currentlyPlayingItem) {
-        [self.audioPlayer replaceCurrentItemWithPlayerItem:itemToPlay];
-        self.currentlyPlayingItem = itemToPlay;
+    AVPlayer *itemToPlay = self.audioPlayerDict[mediaID];
+    if (itemToPlay != self.audioPlayer) {
+        self.audioPlayer = itemToPlay;
     }
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemDidReachEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:[self.audioPlayer currentItem]];
     
-    [self.audioPlayer play];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.audioPlayer play];
+    });
 }
 
 - (void) cordovaPauseStream:(CDVInvokedUrlCommand *)command {
@@ -81,17 +83,16 @@
 - (void) cordovaDeleteStream:(CDVInvokedUrlCommand *)command {
     NSString *mediaID = command.arguments[0];
     
-    AVPlayerItem *itemToDelete = self.audioPlayerItemsDict[mediaID];
+    AVPlayer *itemToDelete = self.audioPlayerDict[mediaID];
     
-    if (self.currentlyPlayingItem == itemToDelete) {
+    if (self.audioPlayer == itemToDelete) {
         [self.audioPlayer pause];
         self.audioPlayer = nil;
-        self.currentlyPlayingItem = nil;
     }
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemDidPlayToEndTimeNotification object:itemToDelete];
 
-    [self.audioPlayerItemsDict removeObjectForKey:mediaID];
+    [self.audioPlayerDict removeObjectForKey:mediaID];
     [self.callbackDict removeObjectForKey:mediaID];
 }
 
@@ -100,11 +101,11 @@
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
     if ([keyPath isEqualToString:@"status"]) {
-        if ([object isKindOfClass:[AVPlayerItem class]]) {
+        if ([object isKindOfClass:[AVPlayer class]]) {
             NSDictionary *jsonObj;
             
-            // we assume that when initialized, the status of a AVPlayerItem is == AVPlayerStatusUnknown
-            AVPlayerItem *item = (AVPlayerItem *)object;
+            // we assume that when initialized, the status of a AVPlayer is == AVPlayerStatusUnknown
+            AVPlayer *item = (AVPlayer *)object;
             BOOL isAudioReadyToPlay = item.status == AVPlayerStatusReadyToPlay;
             
             jsonObj = @{ @"success": isAudioReadyToPlay ? @"true" : @"false"};
@@ -113,7 +114,7 @@
             
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:commandStatus];
             
-            NSArray *objectsForItem = [self.audioPlayerItemsDict allKeysForObject:item];
+            NSArray *objectsForItem = [self.audioPlayerDict allKeysForObject:item];
             NSString *mediaID = [objectsForItem firstObject];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackDict[mediaID]];
         }
@@ -126,6 +127,7 @@
 - (void)playerItemDidReachEnd:(NSNotification *)notification {
     AVPlayerItem *item = [notification object];
     [item seekToTime:kCMTimeZero];
+    [self.audioPlayer pause];
 }
 
 @end
