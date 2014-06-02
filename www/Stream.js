@@ -23,7 +23,6 @@ var Stream = function(src, successCallback, errorCallback) {
     this.successCallback = successCallback;
     this.errorCallback = errorCallback;
 
-    console.log('in constructor!');
     exec(this.successCallback, this.errorCallback, "Stream", "cordovaCreateStream", [this.id, this.src]);
 };
 
@@ -32,6 +31,7 @@ Stream.get = function(id) {
 };
 
 Stream.prototype.play = function() {
+    console.log('i am in play');
     exec(null, null, "Stream", "cordovaPlayStream", [this.id]);
 };
 
