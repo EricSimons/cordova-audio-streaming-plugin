@@ -23,23 +23,23 @@ var Stream = function(src, successCallback, errorCallback) {
     this.successCallback = successCallback;
     this.errorCallback = errorCallback;
     
-    exec(this.successCallback, this.errorCallback, "Stream", "cordovaCreateAudioStream", [this.id, this.src]);
-}
+    exec(this.successCallback, this.errorCallback, "Stream", "cordovaCreateStream", [this.id, this.src]);
+};
 
 Stream.get = function(id) {
     return streamObjects[id];
-}
+};
 
-Stream.prototype.play = function(options) {
+Stream.prototype.play = function() {
     exec(null, null, "Stream", "cordovaPlayStream", [this.id]);
-}
+};
 
 Stream.prototype.pause = function() {
     exec(null, null, "Stream", "cordovaPauseStream", []);
-}
+};
 
-Stream.prototype.delete() {
+Stream.prototype.destroy = function() {
     exec(null, null, "Stream", "cordovaDeleteStream", [this.id]);
-}
+};
 
 module.exports = Stream;
