@@ -22,7 +22,8 @@ var Stream = function(src, successCallback, errorCallback) {
     this.src = src;
     this.successCallback = successCallback;
     this.errorCallback = errorCallback;
-    
+
+    console.log('in constructor!');
     exec(this.successCallback, this.errorCallback, "Stream", "cordovaCreateStream", [this.id, this.src]);
 };
 
