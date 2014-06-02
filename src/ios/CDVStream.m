@@ -26,6 +26,12 @@
     return _audioPlayerDict;
 }
 
+- (NSMutableDictionary *)callbackDict {
+    if (!_callbackDict) _callbackDict = [[NSMutableDictionary alloc] init];
+    
+    return _callbackDict;
+}
+
 - (AVPlayer *)audioPlayer {
     if (!_audioPlayer) _audioPlayer = [[AVPlayer alloc] init];
     _audioPlayer.actionAtItemEnd = AVPlayerActionAtItemEndNone;
@@ -46,19 +52,19 @@
     //dispatch_queue_t streamQueue = dispatch_queue_create(cQueueName, NULL);
     
     //dispatch_async(streamQueue, ^{
-        NSURL *url = [NSURL URLWithString:urlString];
+    NSURL *url = [NSURL URLWithString:urlString];
         
         //AudioStreamerPlayerItem *item = [[AudioStreamerPlayerItem alloc] initWithURL:url];
-        AVPlayer *item = [[AVPlayer alloc] initWithURL:url];
-        [item addObserver:self forKeyPath:@"status" options:0 context:NULL];
-        [item play];
+    AVPlayer *item = [[AVPlayer alloc] initWithURL:url];
+    [item addObserver:self forKeyPath:@"status" options:0 context:NULL];
+    [item play];
+    [item pause];
         //item.mediaID = mediaID;
         //item.callbackID = command.callbackId;
         
-        self.callbackDict[mediaID] = command.callbackId;
-        self.audioPlayerDict[mediaID] = item;
+    self.callbackDict[mediaID] = command.callbackId;
+    self.audioPlayerDict[mediaID] = item;
     //});
-        NSLog(@"here");
 }
 
 - (void) cordovaPlayStream:(CDVInvokedUrlCommand *)command {
