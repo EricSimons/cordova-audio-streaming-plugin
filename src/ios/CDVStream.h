@@ -23,7 +23,7 @@
 - (void) cordovaCreateStream:(CDVInvokedUrlCommand *)command;
 - (void) cordovaPlayStream:(CDVInvokedUrlCommand *)command;
 - (void) cordovaPauseStream:(CDVInvokedUrlCommand *)command;
-- (void) cordovaDeleteStream:(CDVInvokedUrlCommand *)command;
+- (void) cordovaDestoryStream:(CDVInvokedUrlCommand *)command;
 //- (void) cordovaIsStreamReadyToPlay:()
 
 @end

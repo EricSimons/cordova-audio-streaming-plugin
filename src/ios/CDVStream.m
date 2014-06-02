@@ -58,6 +58,7 @@
         self.callbackDict[mediaID] = command.callbackId;
         self.audioPlayerDict[mediaID] = item;
     //});
+        NSLog(@"here");
 }
 
 - (void) cordovaPlayStream:(CDVInvokedUrlCommand *)command {
@@ -80,7 +81,7 @@
     [self.audioPlayer pause];
 }
 
-- (void) cordovaDeleteStream:(CDVInvokedUrlCommand *)command {
+- (void) cordovaDestroyStream:(CDVInvokedUrlCommand *)command {
     NSString *mediaID = command.arguments[0];
     
     AVPlayer *itemToDelete = self.audioPlayerDict[mediaID];
