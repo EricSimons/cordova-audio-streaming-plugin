@@ -31,7 +31,6 @@ Stream.get = function(id) {
 };
 
 Stream.prototype.play = function() {
-    console.log('i am in play');
     exec(null, null, "Stream", "cordovaPlayStream", [this.id]);
 };
 
