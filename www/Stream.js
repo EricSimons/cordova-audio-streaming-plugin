@@ -23,23 +23,46 @@ var Stream = function(src, successCallback, errorCallback) {
     this.successCallback = successCallback;
     this.errorCallback = errorCallback;
 
-    exec(this.successCallback, this.errorCallback, "Stream", "cordovaCreateStream", [this.id, this.src]);
+    exec(this.successCallback, this.errorCallback, "Stream", "cordovaCreateStream", [this.id, this.src, 103]);
 };
 
 Stream.get = function(id) {
     return streamObjects[id];
 };
 
+
 Stream.prototype.play = function() {
     exec(null, null, "Stream", "cordovaPlayStream", [this.id]);
 };
+
 
 Stream.prototype.pause = function() {
     exec(null, null, "Stream", "cordovaPauseStream", []);
 };
 
+
+Stream.prototype.stop = function() {
+    exec(null, null, "Stream", "cordovaStopStream", [this.id]);
+};
+
+
 Stream.prototype.destroy = function() {
-    exec(null, null, "Stream", "cordovaDeleteStream", [this.id]);
+    exec(null, null, "Stream", "cordovaDestroyStream", [this.id]);
+};
+
+// the time argument is in milliseconds, represented by an integer
+Stream.prototype.seekToTime = function(time, successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Stream", "cordovaSeekToPositionInStream", [this.id, time]);
+};
+
+// the successCallback is called on second intervals
+Stream.prototype.addCallbackToCallAtSecondsInterval = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Stream", "cordovaAddCallbackFunctionForInterval", [this.id]);
+};
+
+
+Stream.prototype.removeCallbackToCallAtSecondsInterval = function() {
+    exec(null, null, "Stream", "cordovaRemoveCallbackFunctionForInterval", [this.id]);
 };
 
 module.exports = Stream;
