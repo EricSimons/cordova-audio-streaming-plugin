@@ -14,9 +14,11 @@
 @property (nonatomic, strong) NSMutableDictionary *callbackDict;
 @property (nonatomic, strong) NSMutableDictionary *continuousCallbackDict;
 @property (nonatomic, strong) NSMutableDictionary *continuousCallbackIDDict;
+@property (nonatomic, strong) NSMutableDictionary *endOfStreamCallbackDict;
 
 
 @property (nonatomic, strong) AVPlayer *audioPlayer;
+@property (nonatomic, strong) NSString *mediaIDOfCurrentlyPlayingStream;
 
 @end
 
@@ -48,6 +50,12 @@
     return _continuousCallbackIDDict;
 }
 
+- (NSMutableDictionary *)endOfStreamCallbackDict {
+    if (!_endOfStreamCallbackDict) _endOfStreamCallbackDict = [[NSMutableDictionary alloc] init];
+    
+    return _endOfStreamCallbackDict;
+}
+
 
 - (AVPlayer *)audioPlayer {
     if (!_audioPlayer) _audioPlayer = [[AVPlayer alloc] init];
@@ -69,13 +77,16 @@
     //dispatch_async(streamQueue, ^{
     //[self.commandDelegate runInBackground:^{
         NSURL *url = [NSURL URLWithString:urlString];
-        AVPlayer *item = [[AVPlayer alloc] initWithURL:url];
-        [item addObserver:self forKeyPath:@"status" options:0 context:NULL];
-        [item play];
-        [item pause];
+    AVURLAsset *urlAsset = [[AVURLAsset alloc] initWithURL:url options:nil];
+    AVPlayerItem *playerItem = [[AVPlayerItem alloc] initWithAsset:urlAsset];
+    AVPlayer *player = [[AVPlayer alloc] initWithPlayerItem:playerItem];
+        //AVPlayer *item = [[AVPlayer alloc] initWithURL:url];
+        [player addObserver:self forKeyPath:@"status" options:0 context:NULL];
+        //[item play];
+        //[item pause];
         
         self.callbackDict[mediaID] = command.callbackId;
-        self.audioPlayerDict[mediaID] = item;
+        self.audioPlayerDict[mediaID] = player;
     //}];
     
         //AudioStreamerPlayerItem *item = [[AudioStreamerPlayerItem alloc] initWithURL:url];
@@ -99,6 +110,8 @@
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemDidReachEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:[self.audioPlayer currentItem]];
     
+    self.mediaIDOfCurrentlyPlayingStream = mediaID;
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.audioPlayer play];
     });
@@ -107,6 +120,7 @@
 
 - (void) cordovaPauseStream:(CDVInvokedUrlCommand *)command {
     [self.audioPlayer pause];
+    self.mediaIDOfCurrentlyPlayingStream = nil;
 }
 
 
@@ -192,6 +206,21 @@
 }
 
 
+- (void)cordovaAddEndOfStreamCallbackFunction:(CDVInvokedUrlCommand *)command {
+    NSString *mediaID = command.arguments[0];
+    NSString *callbackID = command.callbackId;
+    
+    self.endOfStreamCallbackDict[mediaID] = callbackID;
+}
+
+
+- (void)cordovaRemoveEndOfStreamCallbackFunction:(CDVInvokedUrlCommand *)command {
+    NSString *mediaID = command.arguments[0];
+    
+    [self.endOfStreamCallbackDict removeObjectForKey:mediaID];
+}
+
+
 #pragma mark KVO delegate methods
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
@@ -205,13 +234,13 @@
             
             jsonObj = @{ @"success": isAudioReadyToPlay ? @"true" : @"false"};
             
-            CDVCommandStatus commandStatus = isAudioReadyToPlay ? CDVCommandStatus_OK : CDVCommandStatus_ERROR;
+            NSArray *objectsForItem = [self.audioPlayerDict allKeysForObject:item];
+            NSString *mediaID = [objectsForItem firstObject];
+            
+            CDVCommandStatus commandStatus = isAudioReadyToPlay && mediaID != nil ? CDVCommandStatus_OK : CDVCommandStatus_ERROR;
             
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:commandStatus];
             
-            NSArray *objectsForItem = [self.audioPlayerDict allKeysForObject:item];
-            NSString *mediaID = [objectsForItem firstObject];
-
             [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackDict[mediaID]];
         }
     }
@@ -224,6 +253,14 @@
     AVPlayerItem *item = [notification object];
     [item seekToTime:kCMTimeZero];
     [self.audioPlayer pause];
+    
+    NSString *callbackID = self.endOfStreamCallbackDict[self.mediaIDOfCurrentlyPlayingStream];
+
+    if (callbackID != nil) {
+        CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [result setKeepCallback:[NSNumber numberWithBool:YES]];
+        [self.commandDelegate sendPluginResult:result callbackId:callbackID];
+    }
 }
 
 

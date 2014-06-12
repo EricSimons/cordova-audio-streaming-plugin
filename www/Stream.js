@@ -65,4 +65,14 @@ Stream.prototype.removeCallbackToCallAtSecondsInterval = function() {
     exec(null, null, "Stream", "cordovaRemoveCallbackFunctionForInterval", [this.id]);
 };
 
+
+Stream.prototype.addEndOfStreamCallbackFunction = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Stream", "cordovaAddEndOfStreamCallbackFunction", [this.id]);
+};
+
+
+Stream.prototype.removeEndOfStreamCallbackFunction = function() {
+    exec(null, null, "Stream", "cordovaRemoveEndOfStreamCallbackFunction", [this.id]);
+};
+
 module.exports = Stream;

@@ -48,4 +48,11 @@
 - (void) cordovaRemoveCallbackFunctionForInterval:(CDVInvokedUrlCommand *)command;
 
 
+// adds a callback function to be called after audio has finished playing
+- (void)cordovaAddEndOfStreamCallbackFunction:(CDVInvokedUrlCommand *)command;
+
+// removes the finished playing callback
+- (void)cordovaRemoveEndOfStreamCallbackFunction:(CDVInvokedUrlCommand *)command;
+
+
 @end
